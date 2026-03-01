@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
@@ -27,6 +27,17 @@ export default function PitchResultScreen() {
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [pitchResult, setPitchResult] = useState<{ title: string; logline: string } | null>(null);
+
+    // Save Modal State
+    const [isSaveModalVisible, setIsSaveModalVisible] = useState(false);
+    const [customTetherName, setCustomTetherName] = useState('');
+
+    // Auto-generate pitch on screen load
+    React.useEffect(() => {
+        if (ideas.length > 0 && !pitchResult && !isGenerating) {
+            handleGeneratePitch();
+        }
+    }, []);
 
     const handleGeneratePitch = async () => {
         if (GEMINI_API_KEY === "dummy-api-key-for-mvp") {
@@ -67,7 +78,20 @@ export default function PitchResultScreen() {
         return { bg: colors.light.tag_default_bg, text: colors.light.tag_default_text };
     };
 
+    const toggleSaveModal = () => {
+        if (!isSaveModalVisible) {
+            // Pre-fill with generated title if one exists, otherwise empty string
+            setCustomTetherName(pitchResult ? pitchResult.title : '');
+        }
+        setIsSaveModalVisible(!isSaveModalVisible);
+    };
+
     const handleSaveCollision = async () => {
+        if (!customTetherName.trim()) {
+            Alert.alert("Error", "Please enter a name for this Tether.");
+            return;
+        }
+
         try {
             const ideaIds = ideas.map(i => i.id);
             const combinedText = ideas.map(i => i.content).join('\n---\n');
@@ -75,14 +99,14 @@ export default function PitchResultScreen() {
             await saveCollision(
                 ideaIds,
                 combinedText,
-                pitchResult?.title,
-                pitchResult?.logline,
+                customTetherName.trim(), // User-provided name
+                pitchResult?.logline || "No pitch generated.",
                 "#Draft" // Default tag
             );
 
-            Alert.alert('Saved!', 'The tether has been safely stored in your Vault.', [
-                { text: 'OK', onPress: () => navigation.goBack() }
-            ]);
+            setIsSaveModalVisible(false);
+            navigation.navigate('Dashboard');
+
         } catch (e) {
             console.error(e);
             Alert.alert('Error', 'Could not save the tether.');
@@ -102,20 +126,22 @@ export default function PitchResultScreen() {
 
                 <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 60) }]} bounces={false}>
                     <View style={styles.comboArea}>
-                        {ideas.map((idea, index) => (
-                            <View
-                                key={`${idea.id}-${index}`}
-                                style={[
-                                    styles.comboCard,
-                                    { transform: [{ scale: 1 - (index * 0.05) }, { translateY: index * -8 }], zIndex: 10 - index }
-                                ]}
-                            >
-                                <MaterialIcons name="psychology" size={18} color={colors.light.secondary_text} style={{ marginRight: 8 }} />
-                                <Text style={styles.comboText} numberOfLines={1}>
-                                    {idea.content}
-                                </Text>
-                            </View>
-                        ))}
+                        {ideas.map((idea, index) => {
+                            const tagStyles = getTagStyles(idea.type);
+                            return (
+                                <View
+                                    key={`${idea.id}-${index}`}
+                                    style={styles.comboCard}
+                                >
+                                    <Text style={styles.comboText} numberOfLines={2}>
+                                        {idea.content}
+                                    </Text>
+                                    <View style={[styles.inlineTagBadge, { backgroundColor: tagStyles.bg, borderColor: tagStyles.text }]}>
+                                        <Text style={[styles.inlineTagText, { color: tagStyles.text }]}>{idea.type.toUpperCase()}</Text>
+                                    </View>
+                                </View>
+                            );
+                        })}
                     </View>
 
                     <View style={styles.actionRow}>
@@ -129,10 +155,13 @@ export default function PitchResultScreen() {
                             ) : (
                                 <MaterialIcons name="auto-awesome" size={20} color={colors.light.primary_text} />
                             )}
-                            <Text style={styles.actionBtnText}>{pitchResult ? 'RE-PITCH' : 'GENERATE PITCH'}</Text>
+                            <Text style={styles.actionBtnText}>RE-PITCH</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.actionBtn} onPress={handleSaveCollision}>
+                        <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={toggleSaveModal}
+                        >
                             <MaterialIcons name="bookmark" size={20} color={colors.light.secondary_text} />
                             <Text style={styles.actionBtnText}>SAVE</Text>
                         </TouchableOpacity>
@@ -166,14 +195,55 @@ export default function PitchResultScreen() {
                                 <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_character_bg, borderColor: colors.light.tag_character_text }]}>
                                     <Text style={[styles.tagText, { color: colors.light.tag_character_text }]}>#Noir</Text>
                                 </View>
-                                <View style={[styles.tagBadge, { backgroundColor: colors.light.highlighter_yellow_bg, borderColor: colors.light.highlighter_yellow_border }]}>
-                                    <MaterialIcons name="bolt" size={12} color={colors.light.highlighter_yellow_text} style={{ marginRight: 4 }} />
-                                    <Text style={[styles.tagText, { color: colors.light.highlighter_yellow_text }]}>High Voltage</Text>
-                                </View>
                             </View>
                         </View>
                     )}
                 </ScrollView>
+
+                {/* Custom Save Modal */}
+                <Modal
+                    visible={isSaveModalVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={toggleSaveModal}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+                            <View style={styles.dragHandle} />
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Save Tether</Text>
+                                <TouchableOpacity onPress={toggleSaveModal} style={styles.closeModalBtn}>
+                                    <MaterialIcons name="close" size={24} color={colors.light.secondary_text} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <TextInput
+                                style={styles.modalTextInput}
+                                value={customTetherName}
+                                onChangeText={setCustomTetherName}
+                                placeholder="Name your tether..."
+                                placeholderTextColor="#999"
+                                autoFocus
+                            />
+
+                            <View style={{ flexDirection: 'row', gap: 12 }}>
+                                <TouchableOpacity
+                                    style={[styles.premiumSaveBtn, { flex: 1, backgroundColor: colors.light.card, borderWidth: 1, borderColor: colors.light.border, shadowOpacity: 0, elevation: 0 }]}
+                                    onPress={toggleSaveModal}
+                                >
+                                    <Text style={[styles.premiumSaveBtnText, { color: colors.light.primary_text }]}>CANCEL</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.premiumSaveBtn, { flex: 1 }]}
+                                    onPress={handleSaveCollision}
+                                >
+                                    <Text style={styles.premiumSaveBtnText}>SAVE TO VAULT</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </SafeAreaView>
         </View>
     );
@@ -208,9 +278,8 @@ const styles = StyleSheet.create({
         padding: 24,
     },
     comboArea: {
-        alignItems: 'center',
-        marginBottom: 32,
-        minHeight: 80,
+        marginBottom: 24,
+        gap: 12,
     },
     comboCard: {
         flexDirection: 'row',
@@ -220,20 +289,101 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.light.border,
         paddingHorizontal: 16,
-        height: 60,
+        paddingVertical: 12,
         width: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
-        position: 'absolute',
     },
     comboText: {
         flex: 1,
         fontFamily: typography.mono,
         fontSize: 13,
         color: colors.light.secondary_text,
+        marginRight: 12,
+    },
+    inlineTagBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+    },
+    inlineTagText: {
+        fontFamily: typography.monoBold,
+        fontSize: 11,
+        letterSpacing: 0.5,
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: colors.light.card,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        paddingHorizontal: 20,
+        paddingTop: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 20,
+    },
+    dragHandle: {
+        width: 36,
+        height: 4,
+        backgroundColor: colors.light.border,
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 16,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    modalTitle: {
+        fontFamily: typography.serif,
+        fontSize: 24,
+        fontWeight: '700',
+        color: colors.light.primary_text,
+        letterSpacing: -0.5,
+    },
+    closeModalBtn: {
+        padding: 4,
+    },
+    modalTextInput: {
+        fontFamily: typography.mono,
+        fontSize: 16,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 16,
+        padding: 20,
+        minHeight: 60,
+        color: colors.light.primary_text,
+        marginBottom: 24,
+    },
+    premiumSaveBtn: {
+        backgroundColor: colors.light.primary_btn,
+        paddingVertical: 18,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: colors.light.primary_btn,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    premiumSaveBtnText: {
+        fontFamily: typography.monoBold,
+        color: colors.light.primary_btn_text,
+        fontSize: 14,
+        letterSpacing: 1,
     },
     actionRow: {
         flexDirection: 'row',

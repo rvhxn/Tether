@@ -26,6 +26,11 @@ export default function DashboardScreen() {
     const [editContent, setEditContent] = useState('');
     const [editType, setEditType] = useState('Topic');
 
+    // Modal state for options
+    const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
+    const [selectedIdeaForOptions, setSelectedIdeaForOptions] = useState<Idea | null>(null);
+    const [optionsMode, setOptionsMode] = useState<'menu' | 'confirmDelete'>('menu');
+
     const filters = ['All', 'Topic', 'Character'];
 
     useEffect(() => {
@@ -67,23 +72,7 @@ export default function DashboardScreen() {
         loadIdeas();
     };
 
-    const confirmDeleteIdea = (id: number) => {
-        Alert.alert(
-            "Delete Idea",
-            "Are you sure you want to remove this thought permanently?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        await deleteIdea(id);
-                        loadIdeas();
-                    }
-                }
-            ]
-        );
-    };
+    // Legacy delete function removed in favor of inline modal log.
 
     const getTagStyles = (type: string) => {
         switch (type.toLowerCase()) {
@@ -112,15 +101,9 @@ export default function DashboardScreen() {
                         <Text style={[styles.tagText, { color: tagStyles.text }]}>{idea.type.toUpperCase()}</Text>
                     </View>
                     <TouchableOpacity onPress={() => {
-                        Alert.alert(
-                            "Options",
-                            "What would you like to do?",
-                            [
-                                { text: "Edit", onPress: () => handleEditIdea(idea) },
-                                { text: "Delete", style: "destructive", onPress: () => confirmDeleteIdea(idea.id) },
-                                { text: "Cancel", style: "cancel" }
-                            ]
-                        );
+                        setSelectedIdeaForOptions(idea);
+                        setOptionsMode('menu');
+                        setIsOptionsModalVisible(true);
                     }} style={styles.moreBtn}>
                         <MaterialIcons name="more-horiz" size={18} color={colors.light.secondary_text} />
                     </TouchableOpacity>
@@ -212,13 +195,14 @@ export default function DashboardScreen() {
                     <Modal
                         visible={isEditModalVisible}
                         transparent
-                        animationType="slide"
+                        animationType="fade"
                         onRequestClose={() => setIsEditModalVisible(false)}
                     >
                         <View style={styles.modalOverlay}>
                             <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+                                <View style={styles.dragHandle} />
                                 <View style={styles.modalHeader}>
-                                    <Text style={styles.modalTitle}>Refine Thought</Text>
+                                    <Text style={styles.modalTitle}>Refine</Text>
                                     <TouchableOpacity onPress={() => setIsEditModalVisible(false)} style={styles.closeModalBtn}>
                                         <MaterialIcons name="close" size={24} color={colors.light.secondary_text} />
                                     </TouchableOpacity>
@@ -244,13 +228,18 @@ export default function DashboardScreen() {
                                                     styles.premiumTagOption,
                                                     editType === type && {
                                                         backgroundColor: getTagStyles(type).bg,
-                                                        borderColor: getTagStyles(type).text,
-                                                        borderWidth: 1.5
+                                                        borderColor: getTagStyles(type).bg,
                                                     }
                                                 ]}
                                                 onPress={() => setEditType(type)}
                                             >
-                                                <View style={[styles.tagIndicator, { backgroundColor: getTagStyles(type).text }]} />
+                                                {editType === type ? (
+                                                    <View style={[styles.activeTagIcon, { backgroundColor: getTagStyles(type).text }]}>
+                                                        <MaterialIcons name="check" size={12} color={colors.light.card} />
+                                                    </View>
+                                                ) : (
+                                                    <View style={styles.inactiveTagIcon} />
+                                                )}
                                                 <Text style={[
                                                     styles.premiumTagText,
                                                     editType === type && { color: getTagStyles(type).text, fontFamily: typography.monoBold }
@@ -266,6 +255,83 @@ export default function DashboardScreen() {
                                 >
                                     <Text style={styles.premiumSaveBtnText}>SAVE CHANGES</Text>
                                 </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+
+                    {/* Options / Action Sheet Modal */}
+                    <Modal
+                        visible={isOptionsModalVisible}
+                        transparent
+                        animationType="fade"
+                        onRequestClose={() => setIsOptionsModalVisible(false)}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+                                <View style={styles.dragHandle} />
+
+                                {optionsMode === 'menu' ? (
+                                    <>
+                                        <View style={styles.modalHeader}>
+                                            <Text style={styles.modalTitle}>Options</Text>
+                                            <TouchableOpacity onPress={() => setIsOptionsModalVisible(false)} style={styles.closeModalBtn}>
+                                                <MaterialIcons name="close" size={24} color={colors.light.secondary_text} />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        <TouchableOpacity
+                                            style={styles.optionBtn}
+                                            onPress={() => {
+                                                setIsOptionsModalVisible(false);
+                                                if (selectedIdeaForOptions) handleEditIdea(selectedIdeaForOptions);
+                                            }}
+                                        >
+                                            <MaterialIcons name="edit" size={20} color={colors.light.primary_text} />
+                                            <Text style={styles.optionBtnText}>Edit</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[styles.optionBtn, styles.optionBtnDestructive]}
+                                            onPress={() => setOptionsMode('confirmDelete')}
+                                        >
+                                            <MaterialIcons name="delete-outline" size={20} color="#DC2626" />
+                                            <Text style={[styles.optionBtnText, { color: '#DC2626' }]}>Delete</Text>
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <>
+                                        <View style={styles.modalHeader}>
+                                            <Text style={styles.modalTitle}>Delete?</Text>
+                                            <TouchableOpacity onPress={() => setIsOptionsModalVisible(false)} style={styles.closeModalBtn}>
+                                                <MaterialIcons name="close" size={24} color={colors.light.secondary_text} />
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        <Text style={styles.confirmText}>This action cannot be undone. Are you sure you want to permanently delete this thought?</Text>
+
+                                        <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+                                            <TouchableOpacity
+                                                style={[styles.premiumSaveBtn, { flex: 1, backgroundColor: colors.light.card, borderWidth: 1, borderColor: colors.light.border, shadowOpacity: 0, elevation: 0 }]}
+                                                onPress={() => setOptionsMode('menu')}
+                                            >
+                                                <Text style={[styles.premiumSaveBtnText, { color: colors.light.primary_text }]}>CANCEL</Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={[styles.premiumSaveBtn, { flex: 1, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FEE2E2', shadowOpacity: 0, elevation: 0 }]}
+                                                onPress={async () => {
+                                                    if (selectedIdeaForOptions) {
+                                                        await deleteIdea(selectedIdeaForOptions.id);
+                                                        setIsOptionsModalVisible(false);
+                                                        loadIdeas();
+                                                    }
+                                                }}
+                                            >
+                                                <Text style={[styles.premiumSaveBtnText, { color: '#DC2626' }]}>DELETE</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </>
+                                )}
                             </View>
                         </View>
                     </Modal>
@@ -433,14 +499,23 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: colors.light.card,
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        padding: 24,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        paddingHorizontal: 20,
+        paddingTop: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -10 },
         shadowOpacity: 0.1,
         shadowRadius: 20,
         elevation: 20,
+    },
+    dragHandle: {
+        width: 36,
+        height: 4,
+        backgroundColor: colors.light.border,
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 16,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -453,6 +528,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: '700',
         color: colors.light.primary_text,
+        letterSpacing: -0.5,
     },
     closeModalBtn: {
         padding: 4,
@@ -460,14 +536,13 @@ const styles = StyleSheet.create({
     modalTextInput: {
         fontFamily: typography.mono,
         fontSize: 16,
-        backgroundColor: '#F9F9F8',
+        lineHeight: 24,
+        backgroundColor: '#F9FAFB',
         borderRadius: 16,
         padding: 20,
         minHeight: 140,
         textAlignVertical: 'top',
         color: colors.light.primary_text,
-        borderWidth: 1,
-        borderColor: colors.light.border,
         marginBottom: 24,
     },
     modalSection: {
@@ -490,16 +565,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 14,
-        borderRadius: 12,
-        borderWidth: 1,
+        borderRadius: 16,
+        borderWidth: 1.5,
         borderColor: colors.light.border,
-        backgroundColor: colors.light.background,
+        backgroundColor: colors.light.card,
     },
-    tagIndicator: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+    activeTagIcon: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
         marginRight: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    inactiveTagIcon: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        borderWidth: 1.5,
+        borderColor: colors.light.secondary_text,
+        marginRight: 10,
+        opacity: 0.3,
     },
     premiumTagText: {
         fontFamily: typography.mono,
@@ -523,5 +609,32 @@ const styles = StyleSheet.create({
         color: colors.light.primary_btn_text,
         fontSize: 16,
         letterSpacing: 1,
+    },
+    optionBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 16,
+        marginBottom: 12,
+        gap: 16,
+    },
+    optionBtnDestructive: {
+        backgroundColor: '#FEF2F2',
+        borderWidth: 1,
+        borderColor: '#FEE2E2',
+    },
+    optionBtnText: {
+        fontFamily: typography.monoBold,
+        fontSize: 15,
+        color: colors.light.primary_text,
+    },
+    confirmText: {
+        fontFamily: typography.mono,
+        fontSize: 14,
+        color: colors.light.secondary_text,
+        lineHeight: 22,
+        marginBottom: 8,
     }
 });
