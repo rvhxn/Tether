@@ -26,7 +26,7 @@ export default function PitchResultScreen() {
     const ideas = route.params?.ideas as Idea[] || [];
 
     const [isGenerating, setIsGenerating] = useState(false);
-    const [pitchResult, setPitchResult] = useState<{ title: string; logline: string } | null>(null);
+    const [pitchResult, setPitchResult] = useState<{ title: string; logline: string; genre: string } | null>(null);
 
     // Save Modal State
     const [isSaveModalVisible, setIsSaveModalVisible] = useState(false);
@@ -46,7 +46,8 @@ export default function PitchResultScreen() {
             setTimeout(() => {
                 setPitchResult({
                     title: "The Chlorophyll Protocol",
-                    logline: "In a rain-slicked 2084 Tokyo, a retired botanist must pull off the ultimate heist: stealing the consciousness of the world's last naturally growing tree."
+                    logline: "In a rain-slicked 2084 Tokyo, a retired botanist must pull off the ultimate heist: stealing the consciousness of the world's last naturally growing tree.",
+                    genre: "Sci-Fi"
                 });
                 setIsGenerating(false);
             }, 1500);
@@ -101,7 +102,7 @@ export default function PitchResultScreen() {
                 combinedText,
                 customTetherName.trim(), // User-provided name
                 pitchResult?.logline || "No pitch generated.",
-                "#Draft" // Default tag
+                pitchResult?.genre ? `#${pitchResult.genre}` : "#Draft"
             );
 
             setIsSaveModalVisible(false);
@@ -190,10 +191,7 @@ export default function PitchResultScreen() {
 
                             <View style={styles.tagsContainer}>
                                 <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_default_bg, borderColor: colors.light.tag_default_text }]}>
-                                    <Text style={[styles.tagText, { color: colors.light.tag_default_text }]}>#SciFi</Text>
-                                </View>
-                                <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_character_bg, borderColor: colors.light.tag_character_text }]}>
-                                    <Text style={[styles.tagText, { color: colors.light.tag_character_text }]}>#Noir</Text>
+                                    <Text style={[styles.tagText, { color: colors.light.tag_default_text }]}>#{pitchResult.genre.replace(/\s+/g, '')}</Text>
                                 </View>
                             </View>
                         </View>

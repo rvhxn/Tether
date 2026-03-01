@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,6 +21,7 @@ export default function VaultScreen() {
     const insets = useSafeAreaInsets();
     const [collisions, setCollisions] = useState<Collision[]>([]);
     const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [activeFilter, setActiveFilter] = useState('All');
 
     useFocusEffect(
         useCallback(() => {
@@ -36,6 +37,22 @@ export default function VaultScreen() {
     const toggleExpand = (id: number) => {
         setExpandedId(prev => prev === id ? null : id);
     };
+
+    const uniqueTags = useMemo(() => {
+        const tags = new Set<string>();
+        collisions.forEach(c => {
+            if (c.tags) {
+                // Remove '#' before adding to the Set for cleaner filtering internally
+                tags.add(c.tags.replace('#', ''));
+            }
+        });
+        return ['All', ...Array.from(tags).sort()];
+    }, [collisions]);
+
+    const filteredCollisions = useMemo(() => {
+        if (activeFilter === 'All') return collisions;
+        return collisions.filter(c => c.tags?.replace('#', '') === activeFilter);
+    }, [activeFilter, collisions]);
 
     const renderItem = ({ item }: { item: Collision }) => {
         const isExpanded = expandedId === item.id;
@@ -77,8 +94,8 @@ export default function VaultScreen() {
 
                         {item.tags && (
                             <View style={styles.tagsContainer}>
-                                <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_draft_bg, borderColor: colors.light.tag_draft_text }]}>
-                                    <Text style={[styles.tagText, { color: colors.light.tag_draft_text }]}>{item.tags}</Text>
+                                <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_default_bg, borderColor: colors.light.tag_default_text }]}>
+                                    <Text style={[styles.tagText, { color: colors.light.tag_default_text }]}>{item.tags}</Text>
                                 </View>
                             </View>
                         )}
@@ -96,7 +113,25 @@ export default function VaultScreen() {
                     <Text style={styles.headerSubtitle}>Saved Tethers</Text>
                 </View>
 
-                {collisions.length === 0 ? (
+                {collisions.length > 0 && (
+                    <View style={styles.filterContainer}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+                            {uniqueTags.map(tag => (
+                                <TouchableOpacity
+                                    key={tag}
+                                    style={[styles.filterBtn, activeFilter === tag && styles.filterBtnActive]}
+                                    onPress={() => setActiveFilter(tag)}
+                                >
+                                    <Text style={[styles.filterText, activeFilter === tag && styles.filterTextActive]}>
+                                        {tag}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+
+                {filteredCollisions.length === 0 ? (
                     <View style={styles.emptyState}>
                         <MaterialIcons name="inventory-2" size={64} color={colors.light.border} />
                         <Text style={styles.emptyText}>Your vault is empty.</Text>
@@ -104,7 +139,7 @@ export default function VaultScreen() {
                     </View>
                 ) : (
                     <FlatList
-                        data={collisions}
+                        data={filteredCollisions}
                         keyExtractor={item => item.id.toString()}
                         renderItem={renderItem}
                         contentContainerStyle={[styles.listContainer, { paddingBottom: Math.max(insets.bottom, 40) }]}
@@ -139,6 +174,37 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: colors.light.secondary_text,
         marginTop: 4,
+    },
+    filterContainer: {
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.light.border,
+        backgroundColor: colors.light.background,
+    },
+    filterScroll: {
+        paddingHorizontal: 20,
+        gap: 8,
+    },
+    filterBtn: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: '#F9FAFB',
+        borderWidth: 1,
+        borderColor: colors.light.border,
+    },
+    filterBtnActive: {
+        backgroundColor: colors.light.primary_text,
+        borderColor: colors.light.primary_text,
+    },
+    filterText: {
+        fontFamily: typography.mono,
+        fontSize: 12,
+        color: colors.light.secondary_text,
+    },
+    filterTextActive: {
+        fontFamily: typography.monoBold,
+        color: colors.light.background,
     },
     listContainer: {
         padding: 16,
