@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Platform } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -14,6 +15,7 @@ type Idea = {
 };
 
 export default function ColliderScreen() {
+    const insets = useSafeAreaInsets();
     const [numIdeas, setNumIdeas] = useState(2);
     const [collidedIdeas, setCollidedIdeas] = useState<Idea[]>([]);
     const [isColliding, setIsColliding] = useState(false);
@@ -34,70 +36,86 @@ export default function ColliderScreen() {
         navigation.navigate('PitchResult', { ideas: collidedIdeas });
     };
 
+    const getTagStyles = (type: string) => {
+        switch (type.toLowerCase()) {
+            case 'topic':
+                return { bg: colors.light.tag_topic_bg, text: colors.light.tag_topic_text };
+            case 'character':
+                return { bg: colors.light.tag_character_bg, text: colors.light.tag_character_text };
+            default:
+                return { bg: colors.light.tag_default_bg, text: colors.light.tag_default_text };
+        }
+    };
+
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Tether</Text>
-                <Text style={styles.headerSubtitle}>Smash ideas together</Text>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.impactZone}>
-                {collidedIdeas.length === 0 && !isColliding ? (
-                    <View style={styles.emptyState}>
-                        <MaterialIcons name="bolt" size={64} color={colors.light.border} />
-                        <Text style={styles.emptyText}>Select ideas to synthesize.</Text>
-                    </View>
-                ) : (
-                    <View style={{ gap: 16 }}>
-                        {collidedIdeas.map((idea, index) => (
-                            <View key={`${idea.id}-${index}`} style={styles.ideaCard}>
-                                <View style={styles.cardHeader}>
-                                    <View style={styles.tagBadge}>
-                                        <Text style={styles.tagText}>{idea.type.toUpperCase()}</Text>
-                                    </View>
-                                </View>
-                                <Text style={styles.cardContent}>{idea.content}</Text>
-                            </View>
-                        ))}
-
-                        {collidedIdeas.length > 0 && (
-                            <TouchableOpacity style={styles.pitchBtn} onPress={handlePitchNav}>
-                                <MaterialIcons name="auto-awesome" size={20} color={colors.light.primary_btn_text} />
-                                <Text style={styles.pitchBtnText}>Generate Pitch</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                )}
-            </ScrollView>
-
-            <View style={styles.controlsContainer}>
-                <View style={styles.stepperContainer}>
-                    <TouchableOpacity
-                        style={styles.stepperBtn}
-                        onPress={() => setNumIdeas(Math.max(2, numIdeas - 1))}
-                    >
-                        <MaterialIcons name="remove" size={24} color={colors.light.primary_text} />
-                    </TouchableOpacity>
-                    <Text style={styles.stepperText}>{numIdeas}</Text>
-                    <TouchableOpacity
-                        style={styles.stepperBtn}
-                        onPress={() => setNumIdeas(Math.min(5, numIdeas + 1))}
-                    >
-                        <MaterialIcons name="add" size={24} color={colors.light.primary_text} />
-                    </TouchableOpacity>
+        <View style={styles.safeArea}>
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Tether</Text>
+                    <Text style={styles.headerSubtitle}>Combine ideas together</Text>
                 </View>
 
-                <TouchableOpacity
-                    style={[styles.collideBtn, isColliding && styles.collideBtnActive]}
-                    onPress={handleCollide}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.collideBtnText}>
-                        {isColliding ? 'COLLIDING...' : 'COLLIDE'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
+                <ScrollView contentContainerStyle={[styles.impactZone, { paddingBottom: 120 }]}>
+                    {collidedIdeas.length === 0 && !isColliding ? (
+                        <View style={styles.emptyState}>
+                            <MaterialIcons name="bolt" size={64} color={colors.light.border} />
+                            <Text style={styles.emptyText}>Select ideas to synthesize.</Text>
+                        </View>
+                    ) : (
+                        <View style={{ gap: 16 }}>
+                            {collidedIdeas.map((idea, index) => {
+                                const tagStyles = getTagStyles(idea.type);
+                                return (
+                                    <View key={`${idea.id}-${index}`} style={styles.ideaCard}>
+                                        <View style={styles.cardHeader}>
+                                            <View style={[styles.tagBadge, { backgroundColor: tagStyles.bg }]}>
+                                                <Text style={[styles.tagText, { color: tagStyles.text }]}>{idea.type.toUpperCase()}</Text>
+                                            </View>
+                                        </View>
+                                        <Text style={styles.cardContent}>{idea.content}</Text>
+                                    </View>
+                                );
+                            })}
+
+                            {collidedIdeas.length > 0 && (
+                                <TouchableOpacity style={styles.pitchBtn} onPress={handlePitchNav}>
+                                    <MaterialIcons name="auto-awesome" size={20} color={colors.light.primary_btn_text} />
+                                    <Text style={styles.pitchBtnText}>GENERATE PITCH</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
+                </ScrollView>
+
+                <View style={[styles.controlsContainer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+                    <View style={styles.stepperContainer}>
+                        <TouchableOpacity
+                            style={styles.stepperBtn}
+                            onPress={() => setNumIdeas(Math.max(2, numIdeas - 1))}
+                        >
+                            <MaterialIcons name="remove" size={24} color={colors.light.primary_text} />
+                        </TouchableOpacity>
+                        <Text style={styles.stepperText}>{numIdeas}</Text>
+                        <TouchableOpacity
+                            style={styles.stepperBtn}
+                            onPress={() => setNumIdeas(Math.min(5, numIdeas + 1))}
+                        >
+                            <MaterialIcons name="add" size={24} color={colors.light.primary_text} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.collideBtn, isColliding && styles.collideBtnActive]}
+                        onPress={handleCollide}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.collideBtnText}>
+                            {isColliding ? 'TETHERING...' : 'TETHER'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -108,7 +126,7 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 24,
-        paddingTop: 40,
+        paddingTop: 8,
         alignItems: 'center',
     },
     headerTitle: {
@@ -156,7 +174,6 @@ const styles = StyleSheet.create({
     },
     tagBadge: {
         alignSelf: 'flex-start',
-        backgroundColor: '#F3F4F6',
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 4,
@@ -164,11 +181,10 @@ const styles = StyleSheet.create({
     tagText: {
         fontFamily: typography.mono,
         fontSize: 10,
-        color: '#6B7280',
         letterSpacing: 0.5,
     },
     cardContent: {
-        fontFamily: typography.sans,
+        fontFamily: typography.mono,
         fontSize: 16,
         lineHeight: 24,
         color: colors.light.primary_text,
@@ -178,16 +194,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: colors.light.primary_btn,
-        paddingVertical: 16,
+        paddingVertical: 18,
         borderRadius: 30,
         marginTop: 16,
         gap: 8,
     },
     pitchBtnText: {
-        fontFamily: typography.sans,
-        fontWeight: '600',
-        fontSize: 16,
+        fontFamily: typography.mono,
+        fontWeight: '800',
+        fontSize: 14,
         color: colors.light.primary_btn_text,
+        letterSpacing: 1,
     },
     controlsContainer: {
         padding: 24,
@@ -196,6 +213,10 @@ const styles = StyleSheet.create({
         borderTopColor: colors.light.border,
         flexDirection: 'row',
         gap: 16,
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
     },
     stepperContainer: {
         flexDirection: 'row',
@@ -211,9 +232,9 @@ const styles = StyleSheet.create({
     },
     stepperText: {
         fontFamily: typography.mono,
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '700',
-        width: 24,
+        width: 28,
         textAlign: 'center',
         color: colors.light.primary_text,
     },
@@ -229,9 +250,9 @@ const styles = StyleSheet.create({
         opacity: 0.9,
     },
     collideBtnText: {
-        fontFamily: typography.serif,
+        fontFamily: typography.mono,
         fontSize: 18,
-        fontWeight: '700',
+        fontWeight: '800',
         color: colors.light.primary_btn_text,
         letterSpacing: 2,
     }

@@ -4,6 +4,7 @@ import { StyleSheet, View, Text } from 'react-native';
 import * as Font from 'expo-font';
 import RootNavigator from './src/navigation/RootNavigator';
 import { initDb } from './src/database/db';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
   useFonts,
@@ -66,10 +67,10 @@ export default function App() {
   }
 
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar style="auto" />
       <RootNavigator />
-    </>
+    </SafeAreaProvider>
   );
 }
 

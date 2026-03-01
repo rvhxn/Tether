@@ -70,3 +70,16 @@ export async function getCollisions() {
         created_at: string
     }>('SELECT * FROM collisions ORDER BY created_at DESC');
 }
+
+export async function updateIdea(id: number, content: string, type: string) {
+    const db = await SQLite.openDatabaseAsync(dbName);
+    await db.runAsync(
+        'UPDATE ideas SET content = ?, type = ? WHERE id = ?',
+        content, type, id
+    );
+}
+
+export async function deleteIdea(id: number) {
+    const db = await SQLite.openDatabaseAsync(dbName);
+    await db.runAsync('DELETE FROM ideas WHERE id = ?', id);
+}

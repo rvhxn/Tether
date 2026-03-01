@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
@@ -18,6 +19,7 @@ type Idea = {
 const GEMINI_API_KEY = "dummy-api-key-for-mvp";
 
 export default function PitchResultScreen() {
+    const insets = useSafeAreaInsets();
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
 
@@ -53,6 +55,18 @@ export default function PitchResultScreen() {
         }
     };
 
+    const getTagStyles = (type: string) => {
+        // Simple mapping for PitchResult tags which are currently static categories
+        const typeLower = type.toLowerCase();
+        if (typeLower.includes('sci') || typeLower.includes('topic')) {
+            return { bg: colors.light.tag_topic_bg, text: colors.light.tag_topic_text };
+        }
+        if (typeLower.includes('noir') || typeLower.includes('character')) {
+            return { bg: colors.light.tag_character_bg, text: colors.light.tag_character_text };
+        }
+        return { bg: colors.light.tag_default_bg, text: colors.light.tag_default_text };
+    };
+
     const handleSaveCollision = async () => {
         try {
             const ideaIds = ideas.map(i => i.id);
@@ -66,100 +80,102 @@ export default function PitchResultScreen() {
                 "#Draft" // Default tag
             );
 
-            Alert.alert('Saved!', 'The collision has been safely stored in your Vault.', [
+            Alert.alert('Saved!', 'The tether has been safely stored in your Vault.', [
                 { text: 'OK', onPress: () => navigation.goBack() }
             ]);
         } catch (e) {
             console.error(e);
-            Alert.alert('Error', 'Could not save the collision.');
+            Alert.alert('Error', 'Could not save the tether.');
         }
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-                    <MaterialIcons name="arrow-back" size={24} color={colors.light.primary_text} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>TETHER RESULTS</Text>
-                <View style={{ width: 24 }} />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
-                <View style={styles.comboArea}>
-                    {ideas.map((idea, index) => (
-                        <View
-                            key={`${idea.id}-${index}`}
-                            style={[
-                                styles.comboCard,
-                                { transform: [{ scale: 1 - (index * 0.05) }, { translateY: index * -10 }], zIndex: 10 - index }
-                            ]}
-                        >
-                            <MaterialIcons name="psychology" size={18} color={colors.light.secondary_text} style={{ marginRight: 8 }} />
-                            <Text style={styles.comboText} numberOfLines={1}>
-                                {idea.content}
-                            </Text>
-                        </View>
-                    ))}
+        <View style={styles.safeArea}>
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+                        <MaterialIcons name="arrow-back" size={24} color={colors.light.primary_text} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>TETHER RESULTS</Text>
+                    <View style={{ width: 24 }} />
                 </View>
 
-                <View style={styles.actionRow}>
-                    <TouchableOpacity
-                        style={styles.actionBtn}
-                        onPress={handleGeneratePitch}
-                        disabled={isGenerating}
-                    >
-                        {isGenerating ? (
-                            <ActivityIndicator color={colors.light.primary_text} size="small" />
-                        ) : (
-                            <MaterialIcons name="auto-awesome" size={20} color={colors.light.primary_text} />
-                        )}
-                        <Text style={styles.actionBtnText}>{pitchResult ? 'Re-Pitch' : 'Generate Pitch'}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.actionBtn} onPress={handleSaveCollision}>
-                        <MaterialIcons name="bookmark" size={20} color={colors.light.secondary_text} />
-                        <Text style={styles.actionBtnText}>Save</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {pitchResult && (
-                    <View style={styles.storyDraftContainer}>
-                        <View style={styles.draftHeader}>
-                            <Text style={styles.draftTitleText}>Story Draft</Text>
-                            <View style={styles.versionBadge}>
-                                <Text style={styles.versionText}>v1.0</Text>
+                <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 60) }]} bounces={false}>
+                    <View style={styles.comboArea}>
+                        {ideas.map((idea, index) => (
+                            <View
+                                key={`${idea.id}-${index}`}
+                                style={[
+                                    styles.comboCard,
+                                    { transform: [{ scale: 1 - (index * 0.05) }, { translateY: index * -8 }], zIndex: 10 - index }
+                                ]}
+                            >
+                                <MaterialIcons name="psychology" size={18} color={colors.light.secondary_text} style={{ marginRight: 8 }} />
+                                <Text style={styles.comboText} numberOfLines={1}>
+                                    {idea.content}
+                                </Text>
                             </View>
-                        </View>
-
-                        <View style={styles.paper}>
-                            <View style={styles.paperHeader}>
-                                <Text style={styles.paperTitle}>{pitchResult.title}</Text>
-                                <Text style={styles.paperSubtitle}>Screenplay Draft • Generated</Text>
-                            </View>
-
-                            <View style={styles.paperContent}>
-                                <Text style={styles.loglineLabel}>LOGLINE:</Text>
-                                <Text style={styles.loglineText}>{pitchResult.logline}</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.tagsContainer}>
-                            <View style={styles.tagBadge}>
-                                <Text style={styles.tagText}>#SciFi</Text>
-                            </View>
-                            <View style={styles.tagBadge}>
-                                <Text style={styles.tagText}>#Noir</Text>
-                            </View>
-                            <View style={[styles.tagBadge, { backgroundColor: colors.light.highlighter_yellow_bg, borderColor: colors.light.highlighter_yellow_border }]}>
-                                <MaterialIcons name="bolt" size={12} color={colors.light.highlighter_yellow_text} style={{ marginRight: 4 }} />
-                                <Text style={[styles.tagText, { color: colors.light.highlighter_yellow_text }]}>High Voltage</Text>
-                            </View>
-                        </View>
+                        ))}
                     </View>
-                )}
-            </ScrollView>
-        </SafeAreaView>
+
+                    <View style={styles.actionRow}>
+                        <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={handleGeneratePitch}
+                            disabled={isGenerating}
+                        >
+                            {isGenerating ? (
+                                <ActivityIndicator color={colors.light.primary_text} size="small" />
+                            ) : (
+                                <MaterialIcons name="auto-awesome" size={20} color={colors.light.primary_text} />
+                            )}
+                            <Text style={styles.actionBtnText}>{pitchResult ? 'RE-PITCH' : 'GENERATE PITCH'}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.actionBtn} onPress={handleSaveCollision}>
+                            <MaterialIcons name="bookmark" size={20} color={colors.light.secondary_text} />
+                            <Text style={styles.actionBtnText}>SAVE</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {pitchResult && (
+                        <View style={styles.storyDraftContainer}>
+                            <View style={styles.draftHeader}>
+                                <Text style={styles.draftTitleText}>STORY DRAFT</Text>
+                                <View style={styles.versionBadge}>
+                                    <Text style={styles.versionText}>v1.0</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.paper}>
+                                <View style={styles.paperHeader}>
+                                    <Text style={styles.paperTitle}>{pitchResult.title}</Text>
+                                    <Text style={styles.paperSubtitle}>Screenplay Draft • Generated</Text>
+                                </View>
+
+                                <View style={styles.paperContent}>
+                                    <Text style={styles.loglineLabel}>LOGLINE:</Text>
+                                    <Text style={styles.loglineText}>{pitchResult.logline}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.tagsContainer}>
+                                <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_default_bg, borderColor: colors.light.tag_default_text }]}>
+                                    <Text style={[styles.tagText, { color: colors.light.tag_default_text }]}>#SciFi</Text>
+                                </View>
+                                <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_character_bg, borderColor: colors.light.tag_character_text }]}>
+                                    <Text style={[styles.tagText, { color: colors.light.tag_character_text }]}>#Noir</Text>
+                                </View>
+                                <View style={[styles.tagBadge, { backgroundColor: colors.light.highlighter_yellow_bg, borderColor: colors.light.highlighter_yellow_border }]}>
+                                    <MaterialIcons name="bolt" size={12} color={colors.light.highlighter_yellow_text} style={{ marginRight: 4 }} />
+                                    <Text style={[styles.tagText, { color: colors.light.highlighter_yellow_text }]}>High Voltage</Text>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -173,7 +189,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: colors.light.border,
         backgroundColor: 'rgba(248, 248, 246, 0.9)',
@@ -183,16 +199,14 @@ const styles = StyleSheet.create({
         marginLeft: -4,
     },
     headerTitle: {
-        fontFamily: typography.sans,
-        fontSize: 12,
-        fontWeight: '600',
+        fontFamily: typography.mono,
+        fontSize: 13,
+        fontWeight: '700',
         color: colors.light.primary_text,
-        letterSpacing: 2,
-        opacity: 0.7,
+        letterSpacing: 1.5,
     },
     scrollContent: {
         padding: 24,
-        paddingBottom: 60,
     },
     comboArea: {
         alignItems: 'center',
@@ -218,16 +232,15 @@ const styles = StyleSheet.create({
     },
     comboText: {
         flex: 1,
-        fontFamily: typography.sans,
-        fontSize: 14,
-        fontWeight: '500',
+        fontFamily: typography.mono,
+        fontSize: 13,
         color: colors.light.secondary_text,
     },
     actionRow: {
         flexDirection: 'row',
         gap: 12,
         marginBottom: 32,
-        marginTop: 20, // push down below Absolute cards
+        marginTop: 12,
     },
     actionBtn: {
         flex: 1,
@@ -235,22 +248,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: colors.light.card,
-        borderRadius: 30,
-        paddingVertical: 14,
-        borderWidth: 1,
+        borderRadius: 16,
+        paddingVertical: 16,
+        borderWidth: 1.5,
         borderColor: colors.light.border,
         gap: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 3,
-        elevation: 1,
+        elevation: 2,
     },
     actionBtnText: {
-        fontFamily: typography.sans,
-        fontSize: 14,
-        fontWeight: '500',
+        fontFamily: typography.mono,
+        fontSize: 12,
+        fontWeight: '800',
         color: colors.light.primary_text,
+        letterSpacing: 1,
     },
     storyDraftContainer: {
         marginBottom: 24,
@@ -259,16 +273,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 16,
         paddingHorizontal: 4,
     },
     draftTitleText: {
-        fontFamily: typography.sans,
+        fontFamily: typography.mono,
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: '800',
         color: colors.light.secondary_text,
         letterSpacing: 2,
-        textTransform: 'uppercase',
     },
     versionBadge: {
         backgroundColor: '#F3F4F6',
@@ -285,27 +298,27 @@ const styles = StyleSheet.create({
     },
     paper: {
         backgroundColor: colors.light.paper_result,
-        borderRadius: 16,
+        borderRadius: 20,
         padding: 24,
         borderWidth: 1,
         borderColor: '#E5E7EB',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 3,
     },
     paperHeader: {
         alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#E5E7EB',
         borderStyle: 'dashed',
-        paddingBottom: 16,
-        marginBottom: 20,
+        paddingBottom: 20,
+        marginBottom: 24,
     },
     paperTitle: {
         fontFamily: typography.serif,
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: '700',
         color: colors.light.primary_text,
         textAlign: 'center',
@@ -316,32 +329,33 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: colors.light.secondary_text,
         textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     paperContent: {
-        backgroundColor: '#F3F4F6',
-        padding: 16,
-        borderRadius: 8,
+        backgroundColor: 'rgba(243, 244, 246, 0.5)',
+        padding: 20,
+        borderRadius: 12,
         borderWidth: 1,
         borderColor: '#E5E7EB',
     },
     loglineLabel: {
         fontFamily: typography.mono,
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: '800',
         color: colors.light.primary_text,
-        marginBottom: 4,
+        marginBottom: 8,
     },
     loglineText: {
         fontFamily: typography.mono,
-        fontSize: 12,
+        fontSize: 13,
         color: '#374151',
-        lineHeight: 20,
+        lineHeight: 22,
     },
     tagsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
-        marginTop: 20,
+        gap: 10,
+        marginTop: 24,
     },
     tagBadge: {
         flexDirection: 'row',
@@ -350,12 +364,13 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.light.border,
         paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
+        paddingVertical: 8,
+        borderRadius: 12,
     },
     tagText: {
         fontFamily: typography.mono,
         fontSize: 12,
         color: colors.light.secondary_text,
+        fontWeight: '500',
     }
 });

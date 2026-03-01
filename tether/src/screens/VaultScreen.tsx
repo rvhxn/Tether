@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
@@ -17,6 +18,7 @@ type Collision = {
 };
 
 export default function VaultScreen() {
+    const insets = useSafeAreaInsets();
     const [collisions, setCollisions] = useState<Collision[]>([]);
     const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -75,8 +77,8 @@ export default function VaultScreen() {
 
                         {item.tags && (
                             <View style={styles.tagsContainer}>
-                                <View style={styles.tagBadge}>
-                                    <Text style={styles.tagText}>{item.tags}</Text>
+                                <View style={[styles.tagBadge, { backgroundColor: colors.light.tag_draft_bg, borderColor: colors.light.tag_draft_text }]}>
+                                    <Text style={[styles.tagText, { color: colors.light.tag_draft_text }]}>{item.tags}</Text>
                                 </View>
                             </View>
                         )}
@@ -87,28 +89,30 @@ export default function VaultScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Tether Vault</Text>
-                <Text style={styles.headerSubtitle}>Saved Tethers</Text>
-            </View>
-
-            {collisions.length === 0 ? (
-                <View style={styles.emptyState}>
-                    <MaterialIcons name="inventory-2" size={64} color={colors.light.border} />
-                    <Text style={styles.emptyText}>Your vault is empty.</Text>
-                    <Text style={styles.emptySubtext}>Smash some ideas to start saving.</Text>
+        <View style={styles.safeArea}>
+            <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Idea Vault</Text>
+                    <Text style={styles.headerSubtitle}>Saved Tethers</Text>
                 </View>
-            ) : (
-                <FlatList
-                    data={collisions}
-                    keyExtractor={item => item.id.toString()}
-                    renderItem={renderItem}
-                    contentContainerStyle={styles.listContainer}
-                    showsVerticalScrollIndicator={false}
-                />
-            )}
-        </SafeAreaView>
+
+                {collisions.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <MaterialIcons name="inventory-2" size={64} color={colors.light.border} />
+                        <Text style={styles.emptyText}>Your vault is empty.</Text>
+                        <Text style={styles.emptySubtext}>Tether some ideas to start saving.</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={collisions}
+                        keyExtractor={item => item.id.toString()}
+                        renderItem={renderItem}
+                        contentContainerStyle={[styles.listContainer, { paddingBottom: Math.max(insets.bottom, 40) }]}
+                        showsVerticalScrollIndicator={false}
+                    />
+                )}
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -119,7 +123,7 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 24,
-        paddingTop: 40,
+        paddingTop: 8,
         backgroundColor: colors.light.background,
         borderBottomWidth: 1,
         borderBottomColor: colors.light.border,
@@ -139,7 +143,6 @@ const styles = StyleSheet.create({
     listContainer: {
         padding: 16,
         gap: 16,
-        paddingBottom: 40,
     },
     emptyState: {
         flex: 1,
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
-        marginBottom: 16, // using gap on FlatList contentContainerStyle is not supported on all RN versions, using marginBottom as fallback here or flex layout overgap
+        marginBottom: 16,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -242,9 +245,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     tagBadge: {
-        backgroundColor: colors.light.highlighter_yellow_bg,
         borderWidth: 1,
-        borderColor: colors.light.highlighter_yellow_border,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
@@ -252,6 +253,5 @@ const styles = StyleSheet.create({
     tagText: {
         fontFamily: typography.mono,
         fontSize: 12,
-        color: colors.light.highlighter_yellow_text,
     }
 });
