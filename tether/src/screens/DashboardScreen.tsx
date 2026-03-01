@@ -351,8 +351,6 @@ const styles = StyleSheet.create({
         paddingTop: 8,
         paddingBottom: 8,
         backgroundColor: 'rgba(248, 248, 246, 0.95)',
-        borderBottomWidth: 1,
-        borderBottomColor: colors.light.border,
         zIndex: 10,
     },
     headerTop: {
