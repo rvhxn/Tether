@@ -149,40 +149,6 @@ export default function DashboardScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            style={styles.filtersScroll}
-                            contentContainerStyle={styles.filtersContainer}
-                        >
-                            {filters.map(f => (
-                                <TouchableOpacity
-                                    key={f}
-                                    style={[
-                                        styles.filterPill,
-                                        activeFilter === f && styles.filterPillActive
-                                    ]}
-                                    onPress={() => setActiveFilter(f)}
-                                >
-                                    <Text style={[
-                                        styles.filterText,
-                                        activeFilter === f && styles.filterTextActive
-                                    ]}>{f}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
-
-                    <ScrollView style={styles.scrollContent} contentContainerStyle={[styles.masonryContainer, { paddingBottom: 100 + insets.bottom }]}>
-                        <View style={styles.column}>
-                            {leftColumn.map(renderIdeaCard)}
-                        </View>
-                        <View style={styles.column}>
-                            {rightColumn.map(renderIdeaCard)}
-                        </View>
-                    </ScrollView>
-
-                    <View style={[styles.inputFixedContainer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
                         <View style={styles.inputWrapper}>
                             <TouchableOpacity
                                 style={[styles.typeToggle, { backgroundColor: getTagStyles(selectedInputType).bg }]}
@@ -209,8 +175,39 @@ export default function DashboardScreen() {
                                 )}
                             </TouchableOpacity>
                         </View>
+
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={styles.filtersScroll}
+                            contentContainerStyle={styles.filtersContainer}
+                        >
+                            {filters.map(f => (
+                                <TouchableOpacity
+                                    key={f}
+                                    style={[
+                                        styles.filterPill,
+                                        activeFilter === f && styles.filterPillActive
+                                    ]}
+                                    onPress={() => setActiveFilter(f)}
+                                >
+                                    <Text style={[
+                                        styles.filterText,
+                                        activeFilter === f && styles.filterTextActive
+                                    ]}>{f}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
                     </View>
 
+                    <ScrollView style={styles.scrollContent} contentContainerStyle={[styles.masonryContainer, { paddingBottom: 24 + insets.bottom }]}>
+                        <View style={styles.column}>
+                            {leftColumn.map(renderIdeaCard)}
+                        </View>
+                        <View style={styles.column}>
+                            {rightColumn.map(renderIdeaCard)}
+                        </View>
+                    </ScrollView>
                     {/* Edit Modal */}
                     <Modal
                         visible={isEditModalVisible}
@@ -256,7 +253,7 @@ export default function DashboardScreen() {
                                                 <View style={[styles.tagIndicator, { backgroundColor: getTagStyles(type).text }]} />
                                                 <Text style={[
                                                     styles.premiumTagText,
-                                                    editType === type && { color: getTagStyles(type).text, fontWeight: '700' }
+                                                    editType === type && { color: getTagStyles(type).text, fontFamily: typography.monoBold }
                                                 ]}>{type}</Text>
                                             </TouchableOpacity>
                                         ))}
@@ -308,17 +305,6 @@ const styles = StyleSheet.create({
     accountBtn: {
         padding: 4,
     },
-    inputFixedContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'rgba(248, 248, 246, 0.95)',
-        borderTopWidth: 1,
-        borderTopColor: colors.light.border,
-        paddingHorizontal: 16,
-        paddingTop: 12,
-    },
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -328,6 +314,7 @@ const styles = StyleSheet.create({
         borderColor: colors.light.border,
         paddingHorizontal: 12,
         height: 54,
+        marginBottom: 12,
     },
     typeToggle: {
         width: 32,
@@ -338,9 +325,8 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     typeToggleText: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         fontSize: 14,
-        fontWeight: '700',
     },
     textInput: {
         flex: 1,
@@ -488,9 +474,8 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     modalLabel: {
-        fontFamily: typography.sans,
+        fontFamily: typography.monoBold,
         fontSize: 11,
-        fontWeight: '800',
         color: colors.light.secondary_text,
         marginBottom: 16,
         letterSpacing: 1.5,
@@ -534,9 +519,8 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     premiumSaveBtnText: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         color: colors.light.primary_btn_text,
-        fontWeight: '800',
         fontSize: 16,
         letterSpacing: 1,
     }

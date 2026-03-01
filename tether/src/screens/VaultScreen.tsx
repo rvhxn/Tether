@@ -151,9 +151,8 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     emptyText: {
-        fontFamily: typography.sans,
+        fontFamily: typography.monoBold,
         fontSize: 16,
-        fontWeight: '600',
         color: colors.light.primary_text,
         marginTop: 16,
     },
@@ -211,9 +210,8 @@ const styles = StyleSheet.create({
         borderTopColor: colors.light.border,
     },
     label: {
-        fontFamily: typography.sans,
+        fontFamily: typography.monoBold,
         fontSize: 10,
-        fontWeight: '700',
         color: colors.light.secondary_text,
         letterSpacing: 1,
         marginBottom: 8,
@@ -236,7 +234,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     ideasText: {
-        fontFamily: typography.sans,
+        fontFamily: typography.mono,
         fontSize: 14,
         color: colors.light.secondary_text,
         lineHeight: 22,

@@ -200,8 +200,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     pitchBtnText: {
-        fontFamily: typography.mono,
-        fontWeight: '800',
+        fontFamily: typography.monoBold,
         fontSize: 14,
         color: colors.light.primary_btn_text,
         letterSpacing: 1,
@@ -231,9 +230,8 @@ const styles = StyleSheet.create({
         padding: 12,
     },
     stepperText: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         fontSize: 20,
-        fontWeight: '700',
         width: 28,
         textAlign: 'center',
         color: colors.light.primary_text,
@@ -250,9 +248,8 @@ const styles = StyleSheet.create({
         opacity: 0.9,
     },
     collideBtnText: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         fontSize: 18,
-        fontWeight: '800',
         color: colors.light.primary_btn_text,
         letterSpacing: 2,
     }

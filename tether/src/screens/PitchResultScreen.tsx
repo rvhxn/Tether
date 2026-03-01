@@ -199,9 +199,8 @@ const styles = StyleSheet.create({
         marginLeft: -4,
     },
     headerTitle: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         fontSize: 13,
-        fontWeight: '700',
         color: colors.light.primary_text,
         letterSpacing: 1.5,
     },
@@ -260,9 +259,8 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     actionBtnText: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         fontSize: 12,
-        fontWeight: '800',
         color: colors.light.primary_text,
         letterSpacing: 1,
     },
@@ -277,9 +275,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
     },
     draftTitleText: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         fontSize: 12,
-        fontWeight: '800',
         color: colors.light.secondary_text,
         letterSpacing: 2,
     },
@@ -339,9 +336,8 @@ const styles = StyleSheet.create({
         borderColor: '#E5E7EB',
     },
     loglineLabel: {
-        fontFamily: typography.mono,
+        fontFamily: typography.monoBold,
         fontSize: 12,
-        fontWeight: '800',
         color: colors.light.primary_text,
         marginBottom: 8,
     },
@@ -371,6 +367,5 @@ const styles = StyleSheet.create({
         fontFamily: typography.mono,
         fontSize: 12,
         color: colors.light.secondary_text,
-        fontWeight: '500',
     }
 });
