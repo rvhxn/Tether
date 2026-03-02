@@ -1,4 +1,14 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+import Constants from 'expo-constants';
+
+const getBaseUrl = () => {
+    // debuggerHost is 'IP:PORT'. We want the IP.
+    const debuggerHost = Constants.expoConfig?.hostUri;
+    const host = debuggerHost?.split(':')[0] || 'localhost';
+    return `http://${host}:3000/api`;
+};
+
+const API_BASE_URL = getBaseUrl();
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 export const fetchIdeas = async (type: string = 'All') => {
     let url = `${API_BASE_URL}/ideas`;

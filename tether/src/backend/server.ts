@@ -26,6 +26,7 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', service: 'tether-backend' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Tether backend server running on http://localhost:${PORT}`);
+app.listen(PORT as number, '0.0.0.0', () => {
+    console.log(`Tether backend server running on http://0.0.0.0:${PORT}`);
+    console.log(`Accessible on local network via your computer's IP`);
 });

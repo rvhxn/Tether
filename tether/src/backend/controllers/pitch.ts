@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
 
 const GENRE_LIST = [
@@ -28,16 +28,16 @@ export const generatePitch = async (req: Request, res: Response) => {
             contents: prompt,
         });
 
-        const text = response.text;
-        const titleMatch = text?.match(/Title:\s*(.*)/i);
-        const loglineMatch = text?.match(/Logline:\s*(.*)/i);
-        const genreMatch = text?.match(/Genre:\s*(.*)/i);
+        const responseText = response.text || '';
+        const titleMatch = responseText.match(/Title:\s*(.*)/i);
+        const loglineMatch = responseText.match(/Logline:\s*(.*)/i);
+        const genreMatch = responseText.match(/Genre:\s*(.*)/i);
 
         const pitchData = {
-            title: titleMatch ? titleMatch[1].trim() : 'Untitled Concept',
-            logline: loglineMatch ? loglineMatch[1].trim() : 'A mysterious new idea blossoms from the chaos.',
-            genre: genreMatch ? genreMatch[1].trim() : 'Sci-Fi',
-            fullText: text || '',
+            title: (titleMatch && titleMatch[1]) ? titleMatch[1].trim() : 'Untitled Concept',
+            logline: (loglineMatch && loglineMatch[1]) ? loglineMatch[1].trim() : 'A mysterious new idea blossoms from the chaos.',
+            genre: (genreMatch && genreMatch[1]) ? genreMatch[1].trim() : 'Sci-Fi',
+            fullText: responseText,
         };
 
         res.json(pitchData);
