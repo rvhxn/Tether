@@ -4,7 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { getIdeas, addIdea, updateIdea, deleteIdea } from '../database/db';
+import { fetchIdeas, createIdea, updateIdea, deleteIdea } from '../services/api';
 
 type Idea = {
     id: number;
@@ -45,16 +45,24 @@ export default function DashboardScreen() {
     }, [activeFilter]);
 
     const loadIdeas = async () => {
-        const data = await getIdeas();
-        setIdeas(data);
+        try {
+            const data = await fetchIdeas();
+            setIdeas(data);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleSaveIdea = async () => {
         if (!inputText.trim()) return;
 
-        await addIdea(inputText.trim(), selectedInputType);
-        setInputText('');
-        loadIdeas();
+        try {
+            await createIdea(inputText.trim(), selectedInputType);
+            setInputText('');
+            loadIdeas();
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleEditIdea = (idea: Idea) => {
@@ -67,9 +75,13 @@ export default function DashboardScreen() {
     const handleUpdateIdea = async () => {
         if (!editingIdea || !editContent.trim()) return;
 
-        await updateIdea(editingIdea.id, editContent.trim(), editType);
-        setIsEditModalVisible(false);
-        loadIdeas();
+        try {
+            await updateIdea(editingIdea.id, editContent.trim(), editType);
+            setIsEditModalVisible(false);
+            loadIdeas();
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     // Legacy delete function removed in favor of inline modal log.

@@ -38,15 +38,13 @@ async function runTests() {
         console.log(`   ✅ Success: Fetched ${randomData.length} random idea(s).`);
 
         // --- 4. POST /api/pitch/generate (Gemini Synthesis) ---
-        console.log("\nTest 4: Generate Gemini Pitch (POST /api/pitch/generate)");
-        const pitchRes = await fetch(`${API_BASE_URL}/pitch/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ combinedIdeas: "A cybernetic knight + A haunted space station" })
-        });
-        if (!pitchRes.ok) throw new Error(`HTTP error! status: ${pitchRes.status} (Likely invalid or missing GEMINI_API_KEY)`);
-        generatedPitch = await pitchRes.json();
-        console.log(`   ✅ Success: Generated Title: ${generatedPitch.title} [Genre: ${generatedPitch.genre}]`);
+        console.log("\nTest 4: Generate Gemini Pitch (SKIPPED PER USER REQUEST)");
+        generatedPitch = {
+            title: "Mock AI Title",
+            logline: "This is a mock logline since the Gemini API is skipped.",
+            genre: "Sci-Fi"
+        };
+        console.log(`   ⏭️ Skipped Gemini, using mock pitch data.`);
 
         // --- 5. POST /api/vault (Save to Vault) ---
         console.log("\nTest 5: Save Collision to Vault (POST /api/vault)");

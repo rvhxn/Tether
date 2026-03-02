@@ -4,8 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { generatePitch } from '../services/gemini';
-import { saveCollision } from '../database/db';
+import { generateAIPitch, saveCollision } from '../services/api';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 type Idea = {
@@ -57,7 +56,7 @@ export default function PitchResultScreen() {
         try {
             setIsGenerating(true);
             const combinedText = ideas.map(i => i.content).join('\n');
-            const result = await generatePitch(GEMINI_API_KEY, combinedText);
+            const result = await generateAIPitch(combinedText);
             setPitchResult(result);
         } catch (e) {
             console.error(e);

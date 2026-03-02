@@ -4,7 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { getRandomIdeas, saveCollision } from '../database/db';
+import { fetchRandomIdeas, saveCollision } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 
 type Idea = {
@@ -25,12 +25,17 @@ export default function ColliderScreen() {
 
     const handleCollide = async () => {
         setIsColliding(true);
-        // Add brief artificial delay for the "impact" feeling
-        setTimeout(async () => {
-            const ideas = await getRandomIdeas(numIdeas);
-            setCollidedIdeas(ideas);
+        try {
+            // Artificial delay for "impact" feeling
+            setTimeout(async () => {
+                const ideas = await fetchRandomIdeas(numIdeas);
+                setCollidedIdeas(ideas);
+                setIsColliding(false);
+            }, 600);
+        } catch (error) {
+            console.error(error);
             setIsColliding(false);
-        }, 600);
+        }
     };
 
     const handlePitchNav = () => {
@@ -51,15 +56,20 @@ export default function ColliderScreen() {
         const combinedText = collidedIdeas.map(i => i.content).join(' + ');
         const ideaIds = collidedIdeas.map(i => i.id);
 
-        await saveCollision(
-            ideaIds,
-            combinedText,
-            customTetherName.trim(),
-            "No pitch generated.",
-            "#Draft"
-        );
-
-        setIsSaveModalVisible(false);
+        try {
+            await saveCollision(
+                ideaIds,
+                combinedText,
+                customTetherName.trim(),
+                "No pitch generated.",
+                "Custom Draft"
+            );
+            setIsSaveModalVisible(false);
+            // Navigate to the Vault so user immediately sees their saved Tether
+            navigation.navigate('Vault');
+        } catch (error) {
+            console.error("Failed to save to vault:", error);
+        }
     };
 
     const getTagStyles = (type: string) => {
@@ -105,7 +115,7 @@ export default function ColliderScreen() {
 
                             {collidedIdeas.length > 0 && (
                                 <View style={styles.actionRow}>
-                                    <TouchableOpacity style={[styles.pitchBtn, { flex: 2 }]} onPress={handlePitchNav}>
+                                    <TouchableOpacity style={[styles.pitchBtn, { flex: 1.5 }]} onPress={handlePitchNav}>
                                         <MaterialIcons name="auto-awesome" size={20} color={colors.light.primary_btn_text} />
                                         <Text style={styles.pitchBtnText}>GENERATE PITCH</Text>
                                     </TouchableOpacity>
@@ -284,8 +294,8 @@ const styles = StyleSheet.create({
     saveSecondaryBtn: {
         flex: 1,
         backgroundColor: '#F9FAFB',
-        borderWidth: 1,
-        borderColor: colors.light.border,
+        borderWidth: 2, // made border thicker so it stands out
+        borderColor: colors.light.primary_btn, // match primary theme color
     },
     pitchBtnText: {
         fontFamily: typography.monoBold,

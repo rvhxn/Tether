@@ -5,7 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
-import { getCollisions } from '../database/db';
+import { fetchVaultCollisions } from '../services/api';
 
 type Collision = {
     id: number;
@@ -30,8 +30,12 @@ export default function VaultScreen() {
     );
 
     const loadCollisions = async () => {
-        const data = await getCollisions();
-        setCollisions(data);
+        try {
+            const data = await fetchVaultCollisions();
+            setCollisions(data);
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const toggleExpand = (id: number) => {
