@@ -16,7 +16,7 @@ export const generatePitch = async (req: Request, res: Response) => {
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey || apiKey === 'dummy-api-key-for-mvp') {
+        if (!apiKey) {
             return res.status(500).json({ error: 'Server GEMINI_API_KEY is not configured securely.' });
         }
 
