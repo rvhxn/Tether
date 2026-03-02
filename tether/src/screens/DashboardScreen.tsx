@@ -333,9 +333,13 @@ export default function DashboardScreen() {
                                                 style={[styles.premiumSaveBtn, { flex: 1, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FEE2E2', shadowOpacity: 0, elevation: 0 }]}
                                                 onPress={async () => {
                                                     if (selectedIdeaForOptions) {
-                                                        await deleteIdea(selectedIdeaForOptions.id);
-                                                        setIsOptionsModalVisible(false);
-                                                        loadIdeas();
+                                                        try {
+                                                            await deleteIdea(selectedIdeaForOptions.id);
+                                                            setIsOptionsModalVisible(false);
+                                                            loadIdeas();
+                                                        } catch (error) {
+                                                            console.error("Failed to delete idea:", error);
+                                                        }
                                                     }
                                                 }}
                                             >
