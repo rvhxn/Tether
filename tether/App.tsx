@@ -4,7 +4,7 @@ import { StyleSheet, View, Text } from 'react-native';
 import * as Font from 'expo-font';
 import RootNavigator from './src/navigation/RootNavigator';
 import { initDb } from './src/database/db';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   useFonts,
@@ -68,8 +68,12 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="auto" />
-      <RootNavigator />
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }} edges={['bottom']}>
+        <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+          <StatusBar style="auto" />
+          <RootNavigator />
+        </View>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }
